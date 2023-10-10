@@ -8,11 +8,14 @@ import os
 import logging
 import sys
 from transformers import BertModel, BertTokenizer, BertForSequenceClassification, AdamW, get_linear_schedule_with_warmup
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/config')
-from load_data_config import *
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+sys.path.append("/root/autodl-tmp/BertClassNews/")
+
+from config.config import *
+from train.utils import Logger
+
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 # class loadDat_Config():
@@ -102,16 +105,17 @@ def save_file(df, path):
     df.to_json(path)
 
 if __name__ == '__main__':
-    config = loadDat_Config()
+    config = Config().loadDat_config
+    log = Logger('./log/2023/app.log')
     train_val_df  = read_process_cls_dat(config.Trpath)
     test_df = read_process_cls_dat(config.Testpath)
     train_df, val_df, test_df, lblEncode, reverse_lblEncode = split_train_val_test_df(train_val_df, test_df,config, is_save = False)
-    logger.info (train_df.shape, test_df.shape, val_df.shape)
+    log.logger.info (train_df.shape, test_df.shape, val_df.shape)
     
     train_dataloader = generateDataloader(train_df['content'].tolist(), train_df['tag'].tolist(),config) 
     val_dataloader = generateDataloader(val_df['content'].tolist(), val_df['tag'].tolist(), config) 
     test_dataloader = generateDataloader(test_df['content'].tolist(), test_df['tag'].tolist(), config) 
-    logger.info ('DataLoader loading success')
+    log.logger.info ('DataLoader loading success')
     
     
     
