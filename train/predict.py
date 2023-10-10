@@ -12,13 +12,9 @@ import pandas as pd
 import logging
 import sys
 from utils import save_model
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/config')
-from model_config import *
 
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/load_dataset')
-from load_data_cls import *
-
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/train')
+sys.path.append("/root/autodl-tmp/BertClassNews/")
+from config.config import *
 from train_eval import evaluate
 from utils import save_model
 
@@ -100,14 +96,15 @@ for line in output.splitlines():
 #     return model
 
 def main():
-    config = model_Config()
+    config = Config().model_config
     test_df = pd.read_json(config.datPath + 'test_cls.json') 
     # model, tokenizer = get_token_model(len(config.lblEncode))
     test_dataloader = generateDataloader(test_df['content'].tolist(), test_df['tag'].tolist(), config)
     model = config.model
     model = save_model(model, config)
     test_accuracy, test_cat_acc, test_pred = evaluate(model, test_dataloader, config)
-    print("Test Accuracy:", test_accuracy, "Test Cat Accuracy:", test_cat_acc)
+    log = Logger('./log/2023/app.log')
+    log.logger.info("Test Accuracy:", test_accuracy, "Test Cat Accuracy:", test_cat_acc)
     
 if __name__ == "__main__":
     main()

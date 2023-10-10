@@ -12,15 +12,15 @@ import sys
 import os
 import logging
 import warnings
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/load_dataset')
-from load_data_cls import *
-sys.path.insert(0, '/root/autodl-tmp/BertClassNews/config')
-from train_eval_config import train_eval_Config
-from load_data_config import loadDat_Config
+sys.path.append("/root/autodl-tmp/BertClassNews/")
+from config.config import *
+from load_dataset.load_data_cls import *
+
+from utils import Logger
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 
 warnings.filterwarnings("ignore")
@@ -140,18 +140,19 @@ def model_train(model, train_dataloader, val_dataloader, config):
 
 
 def main():
-    config = loadDat_Config()
+    config = Config().loadDat_config
     train_val_df  = read_process_cls_dat(config.Trpath)
     test_df = read_process_cls_dat(config.Testpath)
     train_df, val_df, test_df, lblEncode, reverse_lblEncode = split_train_val_test_df(train_val_df, test_df,config, is_save = False)
-    logger.info (train_df.shape, test_df.shape, val_df.shape)
+    log = Logger('./log/2023/app.log')
+    log.logger.info (train_df.shape, test_df.shape, val_df.shape)
     
     train_dataloader = generateDataloader(train_df['content'].tolist(), train_df['tag'].tolist(),config) 
     val_dataloader = generateDataloader(val_df['content'].tolist(), val_df['tag'].tolist(), config) 
     test_dataloader = generateDataloader(test_df['content'].tolist(), test_df['tag'].tolist(), config) 
-    logger.info ('DataLoader loading success')
+    log.logger.info ('DataLoader loading success')
     
-    config2 = train_eval_Config()
+    config2 = Config().train_eval_config 
     model = config2.model
     model_train(model, train_dataloader, val_dataloader, config2)
 
