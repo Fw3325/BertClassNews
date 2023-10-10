@@ -1,14 +1,23 @@
 import os
 import torch
 from transformers import BertTokenizer, BertForSequenceClassification
+import subprocess
 
-
+result = subprocess.run('bash -c "source /etc/network_turbo && env | grep proxy"', shell=True, capture_output=True, text=True)
+output = result.stdout
+for line in output.splitlines():
+    if '=' in line:
+        var, value = line.split('=', 1)
+        os.environ[var] = value
+        
+        
 class train_eval_Config():
     def __init__(self):
         self.lr = 5e-5
         self.batch_size = 16
         self.num_epochs = 1
         self.Datpath = os.path.abspath(os.path.join(os.getcwd(), '..', 'load_dataset'))
+        # self.Datpath = os.path.abspath(os.path.join(os.getcwd(), 'load_dataset'))
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.lblEncode = {'本地旅游': 0,
                              '通报查处': 1,
@@ -34,7 +43,6 @@ class train_eval_Config():
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
         self.model = BertForSequenceClassification.from_pretrained('bert-base-chinese',num_labels=len(self.lblEncode))
         self.lr = 5e-5
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         
 
@@ -43,6 +51,7 @@ class model_Config(object):
     """配置参数"""
     def __init__(self):
         self.path = os.path.abspath(os.path.join(os.getcwd(), '..'))
+        # self.path = os.path.abspath(os.getcwd())
         self.datPath = '{}/data/train_data/'.format(self.path)
         self.model_dir = 'BertRetrainNewAllDat_v1.pt'
         self.wtPath = '{}/data/checkpoint/'.format(self.path)
@@ -93,6 +102,7 @@ class aug_Config():
 class loadDat_Config():
     def __init__(self):
         self.path = os.path.abspath(os.path.join(os.getcwd(), '..'))
+        # self.path = os.path.abspath(os.getcwd())
         self.Trpath = '{}/data/train_data/train_cls-sample.txt'.format(self.path)
         self.Testpath = '{}/data/train_data/dev_cls-sample.txt'.format(self.path)
         self.train_dir = '{}/data/train_data/train_cls.json'.format(self.path)
@@ -100,3 +110,47 @@ class loadDat_Config():
         self.test_dir = '{}/data/train_data/test_cls.json'.format(self.path)
         self.batch_size = 16
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        
+        
+
+
+import abc
+
+class AbstractConfigFactory(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def create_train_eval_config(self):
+        pass
+
+    @abc.abstractmethod  
+    def create_model_config(self):
+        pass
+
+    @abc.abstractmethod  
+    def create_aug_Config(self):
+        pass
+
+    @abc.abstractmethod  
+    def create_loadDat_Config(self):
+        pass
+
+class ConcreteConfigFactory(AbstractConfigFactory):
+
+    def create_train_eval_config(self):
+        return train_eval_Config()
+
+    def create_model_config(self):
+        return model_Config()
+
+    def create_aug_Config(self):
+        return aug_Config()
+
+    def create_loadDat_Config(self):
+        return loadDat_Config()
+
+class Config(object):
+    def __init__(self):
+        self.train_eval_config = train_eval_Config()
+        self.model_config = model_Config()
+        self.aug_config = aug_Config()
+        self.loadDat_config = loadDat_Config()
